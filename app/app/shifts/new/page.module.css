@@ -27,20 +27,50 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--s1);
+  gap: var(--s2);
+  padding: var(--s3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--field-border, var(--line));
+  background: var(--field-bg, transparent);
 }
 
 .field label {
   font-size: var(--text-md);
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--field-color, var(--ink));
 }
 
 .field input {
   padding: var(--s2) var(--s3);
-  border: 1px solid var(--line);
+  border: 1px solid var(--field-border, var(--line));
   border-radius: var(--radius-sm);
   font-size: var(--text-base);
   color: var(--ink);
+  background: #ffffff;
+}
+
+.fieldDate {
+  --field-color: var(--field-date);
+  --field-bg: var(--field-date-bg);
+  --field-border: var(--field-date-border);
+}
+
+.fieldStart {
+  --field-color: var(--field-start);
+  --field-bg: var(--field-start-bg);
+  --field-border: var(--field-start-border);
+}
+
+.fieldEnd {
+  --field-color: var(--field-end);
+  --field-bg: var(--field-end-bg);
+  --field-border: var(--field-end-border);
+}
+
+.fieldMemo {
+  --field-color: var(--field-memo);
+  --field-bg: var(--field-memo-bg);
+  --field-border: var(--field-memo-border);
 }
 
 .error {

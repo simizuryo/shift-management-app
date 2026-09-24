@@ -40,12 +40,12 @@ export default function NewShiftPage() {
       <h1 className={styles.title}>シフトを登録</h1>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.field}>
+        <div className={`${styles.field} ${styles.fieldDate}`}>
           <label htmlFor="date">日付</label>
           <input id="date" name="date" type="date" value={form.date} onChange={handleChange} />
         </div>
 
-        <div className={styles.field}>
+        <div className={`${styles.field} ${styles.fieldStart}`}>
           <label htmlFor="startTime">開始時刻</label>
           <input
             id="startTime"
@@ -56,7 +56,7 @@ export default function NewShiftPage() {
           />
         </div>
 
-        <div className={styles.field}>
+        <div className={`${styles.field} ${styles.fieldEnd}`}>
           <label htmlFor="endTime">終了時刻</label>
           <input
             id="endTime"
@@ -67,7 +67,7 @@ export default function NewShiftPage() {
           />
         </div>
 
-        <div className={styles.field}>
+        <div className={`${styles.field} ${styles.fieldMemo}`}>
           <label htmlFor="memo">メモ(任意)</label>
           <input id="memo" name="memo" type="text" value={form.memo} onChange={handleChange} />
         </div>

@@ -1,12 +1,26 @@
 :root {
   /* カラー */
-  --bg: #ffffff;
+  --bg: #f8fafc;
   --ink: #1a1a1a;
   --muted: #6b7280;
-  --line: #e5e7eb;
-  --accent: #2563eb;
+  --line: #e2e8f0;
+  --accent: #3b82f6;
   --accent-ink: #ffffff;
   --danger: #dc2626;
+
+  /* フォーム項目カラー(シフト登録画面) */
+  --field-date: #1d4ed8;
+  --field-date-bg: #eff6ff;
+  --field-date-border: #93c5fd;
+  --field-start: #047857;
+  --field-start-bg: #ecfdf5;
+  --field-start-border: #6ee7b7;
+  --field-end: #b45309;
+  --field-end-bg: #fffbeb;
+  --field-end-border: #fcd34d;
+  --field-memo: #6d28d9;
+  --field-memo-bg: #f5f3ff;
+  --field-memo-border: #c4b5fd;
 
   /* スペーシング */
   --s1: 4px;
