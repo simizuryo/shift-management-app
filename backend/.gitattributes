@@ -1,5 +1,9 @@
 # See https://git-scm.com/docs/gitattributes for more about git attribute files.
 
+# Linux コンテナ(Docker の ruby イメージ)で実行するため、Windows (core.autocrlf=true) でも
+# チェックアウト時に改行を LF に固定する。CRLF だと bin/rails などの shebang が壊れて起動できない。
+* text=auto eol=lf
+
 # Mark the database schema as having been generated.
 db/schema.rb linguist-generated
 
