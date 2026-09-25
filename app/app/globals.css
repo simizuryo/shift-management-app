@@ -22,6 +22,14 @@
   --field-memo-bg: #f5f3ff;
   --field-memo-border: #c4b5fd;
 
+  /* カレンダー(シフト一覧画面のカレンダー表示) */
+  --calendar-sun: #dc2626;
+  --calendar-sat: #2563eb;
+  --calendar-other-month-bg: #f1f5f9;
+  --calendar-today-bg: #eff6ff;
+  --calendar-shift-bg: #dbeafe;
+  --calendar-shift-ink: #1e40af;
+
   /* スペーシング */
   --s1: 4px;
   --s2: 8px;

@@ -34,6 +34,17 @@ Tailwind CSS を使わないため、CSS変数(カスタムプロパティ)と�
 | 終了時刻 | `--field-end` `#b45309` | `--field-end-bg` `#fffbeb` | `--field-end-border` `#fcd34d` |
 | メモ | `--field-memo` `#6d28d9` | `--field-memo-bg` `#f5f3ff` | `--field-memo-border` `#c4b5fd` |
 
+### カレンダーカラー(シフト一覧画面のカレンダー表示)
+
+| トークン | 値 | 用途 |
+|---|---|---|
+| `--calendar-sun` | `#dc2626` | 日曜日の曜日見出し・日付 |
+| `--calendar-sat` | `#2563eb` | 土曜日の曜日見出し・日付 |
+| `--calendar-other-month-bg` | `#f1f5f9` | 表示中の月以外(前月・翌月)の日のマスの背景 |
+| `--calendar-today-bg` | `#eff6ff` | 今日のマスの背景(枠線は `--accent`) |
+| `--calendar-shift-bg` | `#dbeafe` | カレンダー上のシフトの背景 |
+| `--calendar-shift-ink` | `#1e40af` | カレンダー上のシフトの文字色 |
+
 ## スペーシング
 
 4pxベースのスケール。余白(padding/margin/gap)はすべてこの変数を使う。

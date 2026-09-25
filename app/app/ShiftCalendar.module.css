@@ -1,0 +1,134 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.monthTitle {
+  min-width: 8em;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-align: center;
+}
+
+.navButton,
+.todayButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-size: var(--text-base);
+  text-decoration: none;
+}
+
+.navButton {
+  min-width: 2em;
+}
+
+.todayButton {
+  margin-left: auto;
+}
+
+.navButton:hover,
+.todayButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.weekday,
+.day {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.weekday {
+  padding: var(--s1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: center;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-height: 96px;
+  padding: var(--s1);
+}
+
+.otherMonth {
+  background: var(--calendar-other-month-bg);
+}
+
+.otherMonth .dayNumber {
+  opacity: 0.5;
+}
+
+.today {
+  background: var(--calendar-today-bg);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.dayNumber {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.sunday {
+  color: var(--calendar-sun);
+}
+
+.saturday {
+  color: var(--calendar-sat);
+}
+
+.shiftList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  list-style: none;
+}
+
+.shift {
+  display: flex;
+  flex-direction: column;
+  padding: var(--s1);
+  border-radius: var(--radius-sm);
+  background: var(--calendar-shift-bg);
+  color: var(--calendar-shift-ink);
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.shift:hover {
+  opacity: 0.8;
+}
+
+.shiftTime {
+  font-weight: 500;
+}
+
+.shiftTime,
+.shiftMemo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

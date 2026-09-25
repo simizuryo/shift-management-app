@@ -27,8 +27,33 @@
 
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: var(--s4);
+}
+
+.viewToggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.viewToggleItem {
+  padding: var(--s2) var(--s3);
+  color: var(--muted);
+  font-size: var(--text-base);
+  text-decoration: none;
+}
+
+.viewToggleItem + .viewToggleItem {
+  border-left: 1px solid var(--line);
+}
+
+.viewToggleActive {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
 }
 
 .newButton {
