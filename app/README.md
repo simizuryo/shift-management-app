@@ -1,3 +1,28 @@
+# シフト管理アプリ フロントエンド(Next.js)
+
+## 起動手順
+
+1. バックエンド(Rails API)を起動する。手順は [backend/README.md](../backend/README.md) を参照(`http://localhost:3001` で待ち受け)
+2. このディレクトリで開発サーバーを起動する
+
+   ```bash
+   npm run dev
+   ```
+
+3. http://localhost:3000 を開く
+
+## API の接続先
+
+既定では `http://localhost:3001` の Rails API を呼び出す。変更する場合は `.env.local` に以下を設定する。
+
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+```
+
+API 呼び出しは `lib/shiftsApi.js` にまとめている。
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
