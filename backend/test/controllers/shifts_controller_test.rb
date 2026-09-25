@@ -31,4 +31,25 @@ class ShiftsControllerTest < ActionDispatch::IntegrationTest
     get shifts_url, headers: { "Origin" => "http://localhost:3000" }
     assert_equal "http://localhost:3000", response.headers["Access-Control-Allow-Origin"]
   end
+
+  test "destroy deletes the shift" do
+    assert_difference("Shift.count", -1) do
+      delete shift_url(shifts(:earlier))
+    end
+    assert_response :no_content
+  end
+
+  test "destroy returns 404 for a missing shift" do
+    assert_no_difference("Shift.count") do
+      delete shift_url(id: 0)
+    end
+    assert_response :not_found
+  end
+
+  test "allows CORS preflight for DELETE" do
+    process :options, shift_url(shifts(:earlier)),
+            headers: { "Origin" => "http://localhost:3000", "Access-Control-Request-Method" => "DELETE" }
+    assert_equal "http://localhost:3000", response.headers["Access-Control-Allow-Origin"]
+    assert_includes response.headers["Access-Control-Allow-Methods"], "DELETE"
+  end
 end

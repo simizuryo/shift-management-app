@@ -42,3 +42,11 @@ export async function createShift({ date, startTime, endTime, memo }) {
   }
   return { shift: toShift(await response.json()) };
 }
+
+// シフトを1件削除する。すでに削除済み(404)の場合も一覧から消えていればよいので成功扱いにする
+export async function deleteShift(id) {
+  const response = await fetch(`${API_BASE_URL}/shifts/${id}`, { method: "DELETE" });
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`シフトの削除に失敗しました(HTTP ${response.status})`);
+  }
+}
