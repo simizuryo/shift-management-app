@@ -50,3 +50,36 @@ export async function deleteShift(id) {
     throw new Error(`シフトの削除に失敗しました(HTTP ${response.status})`);
   }
 }
+
+// シフトを1件取得する。存在しない場合は null を返す
+export async function fetchShift(id) {
+  const response = await fetch(`${API_BASE_URL}/shifts/${id}`);
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`シフトの取得に失敗しました(HTTP ${response.status})`);
+  }
+  return toShift(await response.json());
+}
+
+// シフトを1件更新する。バリデーションエラー時は { errors } を返す
+export async function updateShift(id, { date, startTime, endTime, memo }) {
+  const response = await fetch(`${API_BASE_URL}/shifts/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      shift: { date, start_time: startTime, end_time: endTime, memo },
+    }),
+  });
+
+  if (response.status === 422) {
+    const json = await response.json();
+    return { errors: json.errors };
+  }
+  if (response.status === 404) {
+    return { errors: ["このシフトはすでに削除されています"] };
+  }
+  if (!response.ok) {
+    throw new Error(`シフトの更新に失敗しました(HTTP ${response.status})`);
+  }
+  return { shift: toShift(await response.json()) };
+}

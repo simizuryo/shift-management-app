@@ -52,4 +52,43 @@ class ShiftsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "http://localhost:3000", response.headers["Access-Control-Allow-Origin"]
     assert_includes response.headers["Access-Control-Allow-Methods"], "DELETE"
   end
+
+  test "show returns the shift" do
+    get shift_url(shifts(:earlier))
+    assert_response :success
+    assert_equal({ "date" => "2026-09-25", "start_time" => "09:00", "end_time" => "17:00", "memo" => "レジ対応" },
+                 response.parsed_body.except("id"))
+  end
+
+  test "show returns 404 for a missing shift" do
+    get shift_url(id: 0)
+    assert_response :not_found
+  end
+
+  test "update changes the shift" do
+    patch shift_url(shifts(:earlier)),
+          params: { shift: { date: "2026-09-27", start_time: "10:00", end_time: "15:00", memo: "品出し" } }, as: :json
+    assert_response :success
+    assert_equal({ "date" => "2026-09-27", "start_time" => "10:00", "end_time" => "15:00", "memo" => "品出し" },
+                 response.parsed_body.except("id"))
+    assert_equal "品出し", shifts(:earlier).reload.memo
+  end
+
+  test "update returns 422 with errors when invalid" do
+    patch shift_url(shifts(:earlier)), params: { shift: { start_time: "18:00" } }, as: :json
+    assert_response :unprocessable_content
+    assert_not_empty response.parsed_body["errors"]
+    assert_equal "09:00", shifts(:earlier).reload.start_time.strftime("%H:%M")
+  end
+
+  test "update returns 404 for a missing shift" do
+    patch shift_url(id: 0), params: { shift: { memo: "x" } }, as: :json
+    assert_response :not_found
+  end
+
+  test "allows CORS preflight for PATCH" do
+    process :options, shift_url(shifts(:earlier)),
+            headers: { "Origin" => "http://localhost:3000", "Access-Control-Request-Method" => "PATCH" }
+    assert_includes response.headers["Access-Control-Allow-Methods"], "PATCH"
+  end
 end

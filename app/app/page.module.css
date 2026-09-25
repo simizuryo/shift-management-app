@@ -75,6 +75,21 @@
   text-align: right;
 }
 
+.editButton {
+  display: inline-block;
+  margin-right: var(--s2);
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.editButton:hover {
+  opacity: 0.8;
+}
+
 .deleteButton {
   padding: var(--s1) var(--s2);
   border: 1px solid var(--danger);
