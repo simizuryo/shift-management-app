@@ -1,19 +1,25 @@
 import Link from "next/link";
+import { connection } from "next/server";
+import { fetchShifts } from "@/lib/shiftsApi";
 import styles from "./page.module.css";
-
-// TODO: Rails APIから取得したデータに置き換える(現在はモックデータ)
-const shifts = [
-  { id: 1, date: "2026-09-25", startTime: "09:00", endTime: "17:00", memo: "レジ対応" },
-  { id: 2, date: "2026-09-26", startTime: "13:00", endTime: "18:00", memo: "" },
-  { id: 3, date: "2026-09-28", startTime: "09:00", endTime: "17:00", memo: "棚卸し" },
-];
 
 function formatDate(isoDate) {
   const [year, month, day] = isoDate.split("-");
   return `${year}/${month}/${day}`;
 }
 
-export default function ShiftListPage() {
+export default async function ShiftListPage() {
+  // ビルド時に一覧を固定しないよう、リクエストごとに最新のシフトを取得する
+  await connection();
+
+  let shifts = [];
+  let loadError = "";
+  try {
+    shifts = await fetchShifts();
+  } catch {
+    loadError = "シフト一覧を取得できませんでした。バックエンド(Rails API)が起動しているか確認してください。";
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -27,7 +33,9 @@ export default function ShiftListPage() {
           </Link>
         </div>
 
-        {shifts.length === 0 ? (
+        {loadError ? (
+          <p className={styles.errorState}>{loadError}</p>
+        ) : shifts.length === 0 ? (
           <div className={styles.emptyState}>
             <p>まだシフトが登録されていません</p>
             <Link href="/shifts/new" className={styles.newButton}>

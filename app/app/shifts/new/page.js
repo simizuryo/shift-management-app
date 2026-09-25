@@ -3,19 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createShift } from "@/lib/shiftsApi";
 import styles from "./page.module.css";
 
 export default function NewShiftPage() {
   const router = useRouter();
   const [form, setForm] = useState({ date: "", startTime: "", endTime: "", memo: "" });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (!form.date || !form.startTime || !form.endTime) {
@@ -27,8 +29,21 @@ export default function NewShiftPage() {
       return;
     }
 
-    // TODO: Rails APIへPOSTする処理に置き換える(現時点では登録処理は未接続)
-    router.push("/");
+    setError("");
+    setSubmitting(true);
+    try {
+      const result = await createShift(form);
+      if (result.errors) {
+        setError(result.errors.join(" / "));
+        setSubmitting(false);
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("登録に失敗しました。バックエンド(Rails API)が起動しているか確認してください。");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -78,8 +93,8 @@ export default function NewShiftPage() {
           <Link href="/" className={styles.cancelButton}>
             キャンセル
           </Link>
-          <button type="submit" className={styles.submitButton}>
-            登録する
+          <button type="submit" className={styles.submitButton} disabled={submitting}>
+            {submitting ? "登録中..." : "登録する"}
           </button>
         </div>
       </form>
