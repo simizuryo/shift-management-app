@@ -37,6 +37,8 @@ docker run --rm -v "${PWD}:/app" -v shift_bundle:/usr/local/bundle -w /app ruby:
 |---|---|---|
 | GET | `/shifts` | シフトを日付・開始時刻の昇順で全件返す |
 | POST | `/shifts` | シフトを1件登録する |
+| GET | `/shifts/:id` | シフトを1件返す(存在しないID: `404 Not Found`) |
+| PATCH | `/shifts/:id` | シフトを1件更新する(成功: `200 OK`、バリデーションエラー: `422`、存在しないID: `404`) |
 | DELETE | `/shifts/:id` | シフトを1件削除する(成功: `204 No Content`、存在しないID: `404 Not Found`) |
 
 ### POST /shifts リクエスト例

@@ -62,6 +62,9 @@ export default async function ShiftListPage() {
                   </td>
                   <td className={styles.memoCell}>{shift.memo}</td>
                   <td className={styles.actionCell}>
+                    <Link href={`/shifts/${shift.id}/edit`} className={styles.editButton}>
+                      編集
+                    </Link>
                     <DeleteShiftButton
                       id={shift.id}
                       label={`${formatDate(shift.date)} ${shift.startTime}-${shift.endTime}`}
