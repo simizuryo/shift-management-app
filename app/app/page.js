@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { fetchShifts } from "@/lib/shiftsApi";
+import DeleteShiftButton from "./DeleteShiftButton";
 import styles from "./page.module.css";
 
 function formatDate(isoDate) {
@@ -49,6 +50,7 @@ export default async function ShiftListPage() {
                 <th>日付</th>
                 <th>時間</th>
                 <th>メモ</th>
+                <th className={styles.actionCell}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -59,6 +61,12 @@ export default async function ShiftListPage() {
                     {shift.startTime}-{shift.endTime}
                   </td>
                   <td className={styles.memoCell}>{shift.memo}</td>
+                  <td className={styles.actionCell}>
+                    <DeleteShiftButton
+                      id={shift.id}
+                      label={`${formatDate(shift.date)} ${shift.startTime}-${shift.endTime}`}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

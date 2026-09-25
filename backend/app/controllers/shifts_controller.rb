@@ -15,6 +15,15 @@ class ShiftsController < ApplicationController
     end
   end
 
+  # DELETE /shifts/:id
+  def destroy
+    shift = Shift.find_by(id: params[:id])
+    return head :not_found unless shift
+
+    shift.destroy!
+    head :no_content
+  end
+
   private
 
   def shift_params

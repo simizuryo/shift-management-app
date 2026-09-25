@@ -65,6 +65,42 @@
   color: var(--muted);
 }
 
+.actionCell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.table th.actionCell,
+.table td.actionCell {
+  text-align: right;
+}
+
+.deleteButton {
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--danger);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  opacity: 0.8;
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.deleteError {
+  display: block;
+  margin-top: var(--s1);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;
