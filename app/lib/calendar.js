@@ -36,6 +36,11 @@ export function formatMonth({ year, month }) {
   return `${year}-${pad(month)}`;
 }
 
+// "YYYY-MM" の月を表示するカレンダー画面の URL
+export function calendarHref(month) {
+  return `/?view=calendar&month=${month}`;
+}
+
 // 日曜始まりの月カレンダーのマス目を週ごとの配列で返す。
 // 前月・翌月の日も含めて週を埋め、各マスは { date, day, weekday, inMonth } とする。
 export function buildMonthGrid({ year, month }) {
