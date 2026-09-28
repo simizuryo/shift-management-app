@@ -44,6 +44,17 @@
   color: var(--accent);
 }
 
+.summary {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.summaryHours {
+  color: var(--ink);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
