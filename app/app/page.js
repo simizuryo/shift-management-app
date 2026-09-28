@@ -3,6 +3,7 @@ import { fetchShifts } from "@/lib/shiftsApi";
 import { parseMonth } from "@/lib/calendar";
 import ShiftCalendar from "./ShiftCalendar";
 import ShiftList from "./ShiftList";
+import { fromCalendarQuery } from "./shifts/backTarget";
 import styles from "./page.module.css";
 
 // 表示形式は ?view=list(既定)/ ?view=calendar、カレンダーの月は ?month=YYYY-MM で指定する。
@@ -10,6 +11,7 @@ import styles from "./page.module.css";
 export default async function ShiftListPage({ searchParams }) {
   const { view, month } = await searchParams;
   const isCalendar = view === "calendar";
+  const calendarMonth = parseMonth(month);
 
   let shifts = [];
   let loadError = "";
@@ -43,7 +45,10 @@ export default async function ShiftListPage({ searchParams }) {
               カレンダー
             </Link>
           </nav>
-          <Link href="/shifts/new" className={styles.newButton}>
+          <Link
+            href={isCalendar ? `/shifts/new?${fromCalendarQuery(calendarMonth)}` : "/shifts/new"}
+            className={styles.newButton}
+          >
             + 新規登録
           </Link>
         </div>
@@ -51,7 +56,7 @@ export default async function ShiftListPage({ searchParams }) {
         {loadError ? (
           <p className={styles.errorState}>{loadError}</p>
         ) : isCalendar ? (
-          <ShiftCalendar shifts={shifts} month={parseMonth(month)} />
+          <ShiftCalendar shifts={shifts} month={calendarMonth} />
         ) : (
           <ShiftList shifts={shifts} />
         )}

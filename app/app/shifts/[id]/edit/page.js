@@ -1,18 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { calendarHref, formatMonth, parseMonth } from "@/lib/calendar";
 import { fetchShift } from "@/lib/shiftsApi";
+import { backTarget } from "../../backTarget";
 import ShiftForm from "../../ShiftForm";
 import styles from "../../ShiftForm.module.css";
-
-// 戻り先は開いた元の表示にする(カレンダーからは ?from=calendar&month=YYYY-MM が付く)。
-// クエリの値をそのまま URL に使わず、一覧かカレンダー(妥当な月)のどちらかに限って組み立てる。
-function backTarget({ from, month }) {
-  if (from === "calendar") {
-    return { href: calendarHref(formatMonth(parseMonth(month))), label: "カレンダーへ戻る" };
-  }
-  return { href: "/", label: "一覧へ戻る" };
-}
 
 export default async function EditShiftPage({ params, searchParams }) {
   const { id } = await params;
