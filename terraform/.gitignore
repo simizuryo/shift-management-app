@@ -1,0 +1,7 @@
+# Terraform の作業ファイルと state(state には作成したリソースの情報が入るためコミットしない)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
