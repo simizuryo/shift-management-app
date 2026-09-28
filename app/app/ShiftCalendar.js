@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { addMonths, buildMonthGrid, todayISODate } from "@/lib/calendar";
+import { addMonths, buildMonthGrid, calendarHref, formatMonth, todayISODate } from "@/lib/calendar";
 import styles from "./ShiftCalendar.module.css";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-
-function calendarHref(month) {
-  return `/?view=calendar&month=${month}`;
-}
 
 function weekdayClass(weekday) {
   if (weekday === 0) return styles.sunday;
@@ -65,7 +61,7 @@ export default function ShiftCalendar({ shifts, month }) {
                 {dayShifts.map((shift) => (
                   <li key={shift.id}>
                     <Link
-                      href={`/shifts/${shift.id}/edit`}
+                      href={`/shifts/${shift.id}/edit?from=calendar&month=${formatMonth(month)}`}
                       className={styles.shift}
                       title={`${shift.startTime}-${shift.endTime} ${shift.memo}`.trim()}
                     >

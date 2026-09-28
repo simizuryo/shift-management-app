@@ -7,10 +7,12 @@ import { createShift, updateShift } from "@/lib/shiftsApi";
 import styles from "./ShiftForm.module.css";
 
 const EMPTY_SHIFT = { date: "", startTime: "", endTime: "", memo: "" };
+const BACK_TO_LIST = { href: "/", label: "一覧へ戻る" };
 
 // シフトの登録画面(画面B)・編集画面(画面C)で共通のフォーム。
 // initialShift を渡すと編集モードになり、その値を入力済みの状態で表示する。
-export default function ShiftForm({ initialShift }) {
+// back は戻る・キャンセル・保存後の遷移先 { href, label }(既定は一覧)。
+export default function ShiftForm({ initialShift, back = BACK_TO_LIST }) {
   const router = useRouter();
   const isEdit = Boolean(initialShift);
   const [form, setForm] = useState(() =>
@@ -52,7 +54,7 @@ export default function ShiftForm({ initialShift }) {
         setSubmitting(false);
         return;
       }
-      router.push("/");
+      router.push(back.href);
       router.refresh();
     } catch {
       setError(
@@ -64,8 +66,8 @@ export default function ShiftForm({ initialShift }) {
 
   return (
     <div className={styles.page}>
-      <Link href="/" className={styles.backLink}>
-        ← 一覧へ戻る
+      <Link href={back.href} className={styles.backLink}>
+        ← {back.label}
       </Link>
 
       <h1 className={styles.title}>{isEdit ? "シフトを編集" : "シフトを登録"}</h1>
@@ -106,7 +108,7 @@ export default function ShiftForm({ initialShift }) {
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.actions}>
-          <Link href="/" className={styles.cancelButton}>
+          <Link href={back.href} className={styles.cancelButton}>
             キャンセル
           </Link>
           <button type="submit" className={styles.submitButton} disabled={submitting}>
