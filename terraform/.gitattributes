@@ -1,0 +1,3 @@
+# EC2 の user_data として送るシェルスクリプトは LF に固定する。
+# core.autocrlf=true 環境で CRLF になると、EC2 上で "#!/bin/bash" となり起動スクリプトが動かない。
+*.sh text eol=lf
