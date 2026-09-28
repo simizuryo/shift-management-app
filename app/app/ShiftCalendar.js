@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { addMonths, buildMonthGrid, calendarHref, todayISODate } from "@/lib/calendar";
+import { addMonths, buildMonthGrid, calendarHref, formatMonth, todayISODate } from "@/lib/calendar";
+import { formatDuration, summarizeMonth } from "@/lib/workHours";
 import { fromCalendarQuery } from "./shifts/backTarget";
 import styles from "./ShiftCalendar.module.css";
 
@@ -15,6 +16,7 @@ function weekdayClass(weekday) {
 export default function ShiftCalendar({ shifts, month }) {
   const today = todayISODate();
   const weeks = buildMonthGrid(month);
+  const summary = summarizeMonth(shifts, formatMonth(month));
 
   // shifts は日付・開始時刻の昇順で渡されるので、日付ごとにまとめるだけで各日の並び順も保たれる
   const shiftsByDate = new Map();
@@ -39,6 +41,11 @@ export default function ShiftCalendar({ shifts, month }) {
           今月
         </Link>
       </div>
+
+      <p className={styles.summary}>
+        合計 <strong className={styles.summaryHours}>{formatDuration(summary.minutes)}</strong>
+        {`（${summary.count}件）`}
+      </p>
 
       <div className={styles.grid}>
         {WEEKDAYS.map((label, weekday) => (
