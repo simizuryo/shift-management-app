@@ -25,3 +25,22 @@ resource "aws_security_group" "app" {
     Name = "${var.project_name}-app-sg"
   }
 }
+
+# RDS: EC2のセキュリティグループからのPostgreSQL(5432)のみ受け付ける。
+resource "aws_security_group" "db" {
+  name        = "${var.project_name}-db-sg"
+  description = "Allow PostgreSQL only from the app instance"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "PostgreSQL from app instance"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  tags = {
+    Name = "${var.project_name}-db-sg"
+  }
+}
