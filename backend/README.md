@@ -1,35 +1,43 @@
 # シフト管理アプリ バックエンド(Rails API)
 
-Ruby on Rails 8.1(APIモード)+ SQLite。Windows に Ruby をインストールせず、Docker の公式 Ruby イメージで実行する(追加費用なし)。
+Ruby on Rails 8.1(APIモード)+ PostgreSQL 17。Windows に Ruby や PostgreSQL をインストールせず、Docker の公式イメージで実行する(追加費用なし)。
 
 ## 前提
 
 - Docker Desktop が起動していること
 - 以下のコマンドはこの `backend/` ディレクトリで PowerShell から実行する
-- gem は Docker ボリューム `shift_bundle` にキャッシュされる(2回目以降の起動が速くなる)
-
-## セットアップ(初回のみ)
-
-```powershell
-docker run --rm -v "${PWD}:/app" -v shift_bundle:/usr/local/bundle -w /app ruby:3.3.12 bash -c "bundle install && bin/rails db:prepare"
-```
+- `compose.yaml` で PostgreSQL(`db`)と Rails(`web`)をまとめて起動する
+- DB のデータは Docker ボリューム `backend_pgdata`、gem は `backend_bundle` に保存される(2回目以降の起動が速くなる)
 
 ## サーバー起動
 
-Next.js が 3000 番を使うため、ホスト側は 3001 番で公開する。
-
 ```powershell
-docker run --rm -it -p 3001:3000 -v "${PWD}:/app" -v shift_bundle:/usr/local/bundle -w /app ruby:3.3.12 bash -c "rm -f tmp/pids/server.pid && bin/rails s -b 0.0.0.0"
+docker compose up
 ```
 
-- `rm -f tmp/pids/server.pid` は、コンテナ内のPIDが毎回1になり前回の pid ファイルと衝突して起動に失敗するのを防ぐため
+- 起動時に `bundle install` と `bin/rails db:prepare` を実行するので、初回もこれだけでよい(初回は gem のインストールに数分かかる)
+- Next.js が 3000 番を使うため、ホスト側は 3001 番で公開する
 - 動作確認: http://localhost:3001/shifts
+- 停止は `Ctrl+C` のあと `docker compose down`。DB のデータも消す場合は `docker compose down -v`
 
 ## テスト
 
 ```powershell
-docker run --rm -v "${PWD}:/app" -v shift_bundle:/usr/local/bundle -w /app ruby:3.3.12 bin/rails test
+docker compose run --rm web bin/rails test
 ```
+
+## データベースの接続設定
+
+`config/database.yml` は接続先を環境変数で受け取る。ローカルでは `compose.yaml` で設定済み。
+
+| 環境変数 | 既定値 | 説明 |
+|---|---|---|
+| `DB_HOST` | `localhost` | 接続先ホスト(ローカルは `db`、本番は RDS のエンドポイント) |
+| `DB_PORT` | `5432` | |
+| `DB_USERNAME` | `postgres` | |
+| `DB_PASSWORD` | (なし) | |
+| `DB_NAME` | `shift_management_production` | 本番のみ。開発・テストは `shift_management_development` / `shift_management_test` 固定 |
+| `DB_SSLMODE` | `require` | 本番のみ。RDS は SSL 接続を強制している |
 
 ## API
 

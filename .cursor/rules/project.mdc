@@ -70,4 +70,4 @@ alwaysApply: true
 
 - フロントエンド: Next.js(App Router)/ JavaScript(TypeScript不使用)/ Tailwind CSS不使用
 - バックエンド: Ruby on Rails(APIモード)
-- データベース: SQLite
+- データベース: PostgreSQL(ローカルは Docker、本番は RDS)
