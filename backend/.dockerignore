@@ -1,0 +1,15 @@
+# イメージに含めないファイル(本番イメージに不要なもの・秘密情報)
+/.git
+/.bundle
+/.env*
+/config/master.key
+/config/*.key
+/log/*
+/tmp/*
+/storage/*
+/test/
+/vendor/bundle
+/compose.yaml
+/Dockerfile
+/.dockerignore
+/README.md

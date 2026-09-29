@@ -1,0 +1,62 @@
+#!/bin/bash
+# アプリのコンテナ(web: nginx / frontend: Next.js / backend: Rails)を ECR の最新イメージで起動し直す。
+# イメージを ECR に push したあと、SSM の send-command から root で実行する(terraform/README.md 参照)。
+# このファイルは Terraform の templatefile で値を埋め込んでから、user_data で EC2 に置かれる。
+set -eu -o pipefail
+
+REGION="${region}"
+REGISTRY="${registry}"
+BACKEND_IMAGE="${backend_repository_url}:latest"
+FRONTEND_IMAGE="${frontend_repository_url}:latest"
+NGINX_IMAGE="public.ecr.aws/nginx/nginx:stable"
+CONFIG_DIR=/etc/shift-app
+NETWORK=shift-app
+
+echo "== ECR からイメージを取得"
+aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+docker pull "$BACKEND_IMAGE"
+docker pull "$FRONTEND_IMAGE"
+docker pull "$NGINX_IMAGE"
+
+echo "== Rails の環境変数ファイルを作成"
+# DB のパスワードは Secrets Manager から取り出し、root だけが読めるファイルに書く。
+# RDS が管理するシークレットは定期的にローテーションされるため、デプロイのたびに取り直す
+DB_PASSWORD=$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "${db_secret_arn}" \
+  --query SecretString --output text | python3 -c 'import json,sys; print(json.load(sys.stdin)["password"])')
+# SECRET_KEY_BASE は初回だけ生成し、以降は同じ値を使う
+if [ ! -f "$CONFIG_DIR/secret_key_base" ]; then
+  (umask 077 && openssl rand -hex 64 > "$CONFIG_DIR/secret_key_base")
+fi
+(umask 077 && cat > "$CONFIG_DIR/backend.env" <<ENV
+DB_HOST=${db_host}
+DB_NAME=${db_name}
+DB_USERNAME=${db_username}
+DB_PASSWORD=$DB_PASSWORD
+SECRET_KEY_BASE=$(cat "$CONFIG_DIR/secret_key_base")
+ENV
+)
+
+echo "== コンテナを入れ替え"
+docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create "$NETWORK"
+docker rm -f placeholder web frontend backend >/dev/null 2>&1 || true
+docker run -d --name backend --network "$NETWORK" --restart unless-stopped \
+  --env-file "$CONFIG_DIR/backend.env" "$BACKEND_IMAGE"
+docker run -d --name frontend --network "$NETWORK" --restart unless-stopped \
+  -e API_INTERNAL_URL=http://backend:3000 "$FRONTEND_IMAGE"
+docker run -d --name web --network "$NETWORK" --restart unless-stopped -p 80:80 \
+  -v "$CONFIG_DIR/nginx.conf:/etc/nginx/conf.d/default.conf:ro" "$NGINX_IMAGE"
+
+echo "== 起動を待つ(Rails は起動時に db:prepare を実行する)"
+for i in $(seq 1 60); do
+  if curl -sf -o /dev/null http://localhost/api/up && curl -sf -o /dev/null http://localhost/; then
+    echo "OK: アプリが起動した"
+    docker image prune -f >/dev/null
+    docker ps --format '{{.Names}}\t{{.Status}}'
+    exit 0
+  fi
+  sleep 3
+done
+
+echo "NG: 3 分待っても起動しなかった。ログを確認する: docker logs backend / docker logs frontend" >&2
+docker ps -a --format '{{.Names}}\t{{.Status}}' >&2
+exit 1

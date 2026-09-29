@@ -1,7 +1,14 @@
 // Rails API(backend/)とのやり取りをまとめたモジュール。
 // Rails 側は snake_case、画面側は camelCase で扱うため、ここで相互に変換する。
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+// ブラウザからは NEXT_PUBLIC_API_BASE_URL を使う(本番は nginx 経由の相対パス "/api")。
+// サーバー側(Server Components)からの呼び出しでは相対パスが使えないため、
+// API_INTERNAL_URL があればそちらを使う(本番はコンテナ間通信の http://backend:3000)。
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+export const API_BASE_URL =
+  typeof window === "undefined"
+    ? (process.env.API_INTERNAL_URL ?? PUBLIC_API_BASE_URL)
+    : PUBLIC_API_BASE_URL;
 
 function toShift(json) {
   return {
