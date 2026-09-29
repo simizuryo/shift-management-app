@@ -1,0 +1,39 @@
+# ローカル開発用。PostgreSQL(db)と Rails(web)をまとめて起動する。
+# Windows に Ruby や PostgreSQL を入れずに動かすため、どちらも公式の Docker イメージを使う。
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  web:
+    image: ruby:3.3.12
+    working_dir: /app
+    # Next.js が 3000 番を使うため、ホスト側は 3001 番で公開する
+    ports:
+      - "3001:3000"
+    environment:
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    volumes:
+      - .:/app
+      - bundle:/usr/local/bundle
+    # コンテナ内の PID が毎回 1 になり、前回の pid ファイルと衝突して起動に失敗するのを防ぐため削除してから起動する
+    command: bash -c "rm -f tmp/pids/server.pid && bundle install && bin/rails db:prepare && bin/rails s -b 0.0.0.0"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  # gem のキャッシュ(2回目以降の起動が速くなる)
+  bundle:

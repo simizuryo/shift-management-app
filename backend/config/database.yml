@@ -1,31 +1,30 @@
-# SQLite. Versions 3.8.0 and up are supported.
-#   gem install sqlite3
+# PostgreSQL. 接続先は環境変数で指定する。
 #
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem "sqlite3"
+# ローカル: compose.yaml の db コンテナ(DB_HOST=db)につなぐ
+# 本番: RDS につなぐ(DB_HOST / DB_USERNAME / DB_PASSWORD / DB_NAME を指定する)
 #
 default: &default
-  adapter: sqlite3
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+  username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
+  password: <%= ENV["DB_PASSWORD"] %>
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  timeout: 5000
 
 development:
   <<: *default
-  database: storage/development.sqlite3
+  database: shift_management_development
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: storage/test.sqlite3
+  database: shift_management_test
 
-# SQLite3 write its data on the local filesystem, as such it requires
-# persistent disks. If you are deploying to a managed service, you should
-# make sure it provides disk persistence, as many don't.
-#
-# Similarly, if you deploy your application as a Docker container, you must
-# ensure the database is located in a persisted volume.
+# RDS はSSL接続を強制しているため、本番は既定で sslmode=require にする
 production:
   <<: *default
-  # database: path/to/persistent/storage/production.sqlite3
+  database: <%= ENV.fetch("DB_NAME", "shift_management_production") %>
+  sslmode: <%= ENV.fetch("DB_SSLMODE", "require") %>
