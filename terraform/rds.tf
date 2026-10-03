@@ -30,9 +30,10 @@ resource "aws_db_instance" "main" {
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.db.id]
-  availability_zone      = var.availability_zone
-  multi_az               = false
-  publicly_accessible    = false
+  # AZは固定しない。特定AZでdb.t4g.microの容量不足(InsufficientDBInstanceCapacity)が起きるため、
+  # サブネットグループ(1a/1c)の中からAWSに空きのあるAZを選ばせる
+  multi_az            = false
+  publicly_accessible = false
 
   # 課題の検証用で、セッションごとにapply/destroyするため、バックアップと削除保護は無効にする
   backup_retention_period  = 0

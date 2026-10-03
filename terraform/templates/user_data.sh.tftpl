@@ -1,0 +1,29 @@
+#!/bin/bash
+# 初回起動時に実行する。Docker を入れ、デプロイスクリプトと nginx の設定を置き、仮ページ(nginx)をポート80で返す。
+# アプリは、イメージを ECR に push したあとで /usr/local/bin/deploy-app.sh を実行して起動する(terraform/README.md 参照)。
+set -eu -o pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+# t3.micro はメモリが 1GB しかないため、コンテナ 3 つを動かしてもメモリ不足で落ちないよう 1GB のスワップを作る
+dd if=/dev/zero of=/swapfile bs=1M count=1024
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+
+mkdir -p /etc/shift-app
+chmod 700 /etc/shift-app
+
+cat > /etc/shift-app/nginx.conf <<'NGINX_CONF'
+${nginx_conf}
+NGINX_CONF
+
+cat > /usr/local/bin/deploy-app.sh <<'DEPLOY_SCRIPT'
+${deploy_script}
+DEPLOY_SCRIPT
+chmod 700 /usr/local/bin/deploy-app.sh
+
+# アプリをデプロイするまでの間は、仮ページを返す(Docker Hub のレート制限を避けるため ECR Public のイメージを使う)
+docker run -d --name placeholder --restart unless-stopped -p 80:80 public.ecr.aws/nginx/nginx:stable

@@ -27,3 +27,13 @@ output "db_master_secret_arn" {
   description = "マスターユーザーの認証情報が入ったSecrets ManagerのARN"
   value       = aws_db_instance.main.master_user_secret[0].secret_arn
 }
+
+output "ecr_repository_urls" {
+  description = "イメージのpush先(backend: Rails / frontend: Next.js)"
+  value       = { for k, r in aws_ecr_repository.app : k => r.repository_url }
+}
+
+output "ecr_registry" {
+  description = "docker login に使うECRのレジストリ"
+  value       = split("/", aws_ecr_repository.app["backend"].repository_url)[0]
+}

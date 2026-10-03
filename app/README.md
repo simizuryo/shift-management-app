@@ -21,6 +21,8 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 API 呼び出しは `lib/shiftsApi.js` にまとめている。
 
+本番(AWS)では `Dockerfile` でイメージを作る。ブラウザからは nginx 経由の `/api`(ビルド時に `NEXT_PUBLIC_API_BASE_URL` として埋め込む)を、サーバー側(Server Components)からは環境変数 `API_INTERNAL_URL`(コンテナ間通信の `http://backend:3000`)を呼び出す。デプロイ手順は [terraform/README.md](../terraform/README.md) を参照。
+
 ---
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).

@@ -1,0 +1,10 @@
+# イメージに含めないファイル(依存関係はイメージ内で npm ci し直す)
+.git
+node_modules
+.next
+out
+.env*
+npm-debug.log*
+Dockerfile
+.dockerignore
+README.md

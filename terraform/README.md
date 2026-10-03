@@ -8,9 +8,9 @@
 |---|---|---|
 | 1 | ネットワーク + EC2(Docker と仮ページの nginx) | ✅ このディレクトリ |
 | 2 | RDS PostgreSQL(EC2 からのみ接続できるプライベートサブネットに置く) | ✅ このディレクトリ |
-| 3 | デプロイ(アプリのコンテナを EC2 上で動かす) | 未着手 |
+| 3 | デプロイ(ECR にイメージを置き、アプリのコンテナを EC2 上で動かす) | ✅ このディレクトリ |
 
-## 構成(ステップ1・2)
+## 構成
 
 ```
 インターネット
@@ -19,24 +19,36 @@
 VPC 10.0.0.0/16
  ├─ パブリックサブネット 10.0.0.0/24 (ap-northeast-1a)
  │   └─ EC2 t3.micro (Amazon Linux 2023, パブリックIPは自動割り当て)
- │       └─ Docker: nginx(仮ページ) :80
- │            │ PostgreSQL(5432) ※EC2 の SG からのみ許可
- │            ▼
+ │       └─ Docker(ネットワーク shift-app)
+ │           ├─ web: nginx :80 ── /api/* ──▶ backend: Rails :3000
+ │           │                └─ それ以外 ─▶ frontend: Next.js :3000 ── サーバー側の API 呼び出し ─▶ backend
+ │           └─ backend ── PostgreSQL(5432) ※EC2 の SG からのみ許可
+ │                  │
+ │                  ▼
  └─ プライベートサブネット 10.0.10.0/24 (1a) / 10.0.11.0/24 (1c)  ※インターネットへの経路なし
-     └─ RDS PostgreSQL 17 db.t4g.micro (シングルAZ, 1a に配置)
+     └─ RDS PostgreSQL 17 db.t4g.micro (シングルAZ, 1a/1c のうち空きのある AZ に AWS が配置)
+
+ECR: shift-management-app/backend, shift-management-app/frontend(手元でビルドして push、EC2 は pull するだけ)
 ```
+
+- nginx が `/api/*` を Rails に、それ以外を Next.js に振り分ける。画面の `/shifts/new` などと API の `/shifts/:id` のパスが重なるため、API には `/api` を付けて区別している。画面と API が同じオリジンになるので CORS は不要で、パブリック IP が変わってもイメージの再ビルドは要らない
+- 外に公開しているのは nginx の 80 番だけで、Next.js・Rails の 3000 番には外から届かない
+- nginx の設定は `templates/nginx.conf`、デプロイスクリプトは `templates/deploy-app.sh.tftpl`。どちらも EC2 の起動時(user_data)に `/etc/shift-app/nginx.conf` と `/usr/local/bin/deploy-app.sh` に置かれる
 
 - 接続は **SSM Session Manager** で行う。SSH キーは作らず、22 番ポートも開けない
 - IMDSv2 を必須にしている
 - ALB / NAT Gateway / ECS / Elastic IP は無料利用枠がない、または不要なため使わない
-- RDS はパブリックアクセスを無効にしている。DB サブネットグループの要件でプライベートサブネットを 2 AZ 分作るが、RDS 自体はシングルAZ
+- RDS はパブリックアクセスを無効にしている。DB サブネットグループの要件でプライベートサブネットを 2 AZ 分作るが、RDS 自体はシングルAZ。AZ は固定しない(1a で db.t4g.micro の容量不足が起きたため)
 - RDS のマスターパスワードは RDS が生成して **Secrets Manager** に保存する(`manage_master_user_password`)。tfstate には平文で残らない。EC2 のロールにはこのシークレットの読み取り権限だけを付けている
 - 検証用のため、RDS のバックアップ保持は 0 日、削除保護なし、destroy 時の最終スナップショットなし。**destroy すると DB のデータは消える**
+- Rails の DB パスワードは、デプロイのたびに EC2 上で Secrets Manager から取り出し、root だけが読める `/etc/shift-app/backend.env` に書く(RDS が管理するシークレットは定期的にローテーションされるため、毎回取り直す)
+- t3.micro はメモリが 1GB しかないため、起動時に 1GB のスワップを作る
 
 ## 前提
 
 - Terraform 1.7 以上
 - AWS CLI で認証済み(`aws sts get-caller-identity` が通ること)
+- Docker Desktop が起動していること(イメージのビルドと push に使う)
 - (任意)対話的に接続するなら [Session Manager プラグイン](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 
 ## 作成する
@@ -44,11 +56,42 @@ VPC 10.0.0.0/16
 ```powershell
 cd terraform
 terraform init
-terraform plan      # 作成されるリソースを確認(19 個)
+terraform plan      # 作成されるリソースを確認(24 個)
 terraform apply
 ```
 
-出力される `app_url` をブラウザで開き、「Welcome to nginx!」が表示されれば OK(起動処理に 30 秒〜1 分ほどかかる)。RDS の作成には 5〜10 分ほどかかる。
+EC2 のデプロイスクリプトが RDS の情報を使うため、EC2 は RDS ができてから作られる。全体で 6〜7 分ほどかかる。この時点で出力される `app_url` を開くと、仮ページ「Welcome to nginx!」が表示される(起動処理に 1 分ほどかかる)。
+
+## デプロイする
+
+リポジトリのルートで PowerShell から実行する。ECR のリポジトリも apply/destroy のたびに作り直すため、**apply したら毎回イメージを push し直す**。コードを変更したときも同じ手順でよい。
+
+```powershell
+# 1. ECR にログインする
+$registry = terraform -chdir=terraform output -raw ecr_registry
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $registry
+
+# 2. イメージをビルドして push する
+docker build -t "$registry/shift-management-app/backend:latest" backend
+docker build -t "$registry/shift-management-app/frontend:latest" app
+docker push "$registry/shift-management-app/backend:latest"
+docker push "$registry/shift-management-app/frontend:latest"
+
+# 3. EC2 上でデプロイスクリプトを実行する(ECR から pull してコンテナを入れ替える)
+$instanceId = terraform -chdir=terraform output -raw instance_id
+$commandId = aws ssm send-command --region ap-northeast-1 --instance-ids $instanceId `
+  --document-name AWS-RunShellScript --timeout-seconds 600 `
+  --parameters 'commands=["/usr/local/bin/deploy-app.sh"]' `
+  --query Command.CommandId --output text
+
+# 4. 結果を見る(Status が InProgress の間は少し待って再実行する。最後に「OK: アプリが起動した」と出れば成功)
+aws ssm get-command-invocation --region ap-northeast-1 --command-id $commandId --instance-id $instanceId `
+  --query "[Status,StandardOutputContent,StandardErrorContent]" --output text
+```
+
+`app_url` を開き、シフト管理アプリの画面が表示されれば OK。Rails は起動時に `db:prepare` を実行するので、初回デプロイで RDS にテーブルが作られる。
+
+うまく動かないときは、EC2 上で `docker ps -a`、`docker logs backend`、`docker logs frontend`、`docker logs web` を確認する。
 
 ## 動作確認
 
@@ -90,6 +133,7 @@ PostgreSQL のバージョンが表示されれば OK。手元の PC からは `
 | RDS db.t4g.micro(シングルAZ) | 約 $0.025/時間(月 約$18) | 無料利用枠の対象 |
 | RDS ストレージ gp3 20GB | 約 $2.8/月 | 無料利用枠(20GB)の範囲内 |
 | Secrets Manager(シークレット 1 件) | $0.40/月(日割り) | |
+| ECR の保管(2 イメージで約 0.2GB) | $0.10/GB-月(月 約$0.02) | 無料利用枠(500MB)の範囲内。同じリージョンの EC2 への転送は無料 |
 | パブリック IPv4 | 約 $0.005/時間(月 約$3.6) | **無料利用枠なし** |
 | VPC / サブネット / IGW / ルートテーブル / SG / IAM | $0 | |
 
@@ -104,4 +148,4 @@ terraform plan -destroy   # 削除されるリソースを確認
 terraform destroy
 ```
 
-削除後、EC2 コンソールでインスタンスが「終了済み」に、RDS コンソールでデータベースが消えていることを確認する。次回また `terraform apply` すれば同じ構成が再現される。
+削除後、EC2 コンソールでインスタンスが「終了済み」に、RDS コンソールでデータベースが消えていることを確認する。ECR のリポジトリはイメージごと削除される(`force_delete`)。次回また `terraform apply` すれば同じ構成が再現される。

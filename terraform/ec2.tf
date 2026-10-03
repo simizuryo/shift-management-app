@@ -1,6 +1,7 @@
 # EC2単一インスタンス(ステップ1)。
 # 無料利用枠の対象になるt3.microを1台だけ作る。ALB・ECSは無料利用枠がないため使わない。
-# この段階ではDockerを入れて仮のページ(nginx)を返すだけにし、アプリのデプロイはステップ3で行う。
+# 起動時にDocker・デプロイスクリプト・nginxの設定を用意し、仮のページ(nginx)を返す。
+# アプリはECRにイメージをpushしたあと、デプロイスクリプトで起動する(ステップ3、README参照)。
 
 # 最新のAmazon Linux 2023(標準版。SSM Agent同梱)のAMI ID。AWSが公開しているSSMパラメータから取得する
 data "aws_ssm_parameter" "al2023_ami" {
@@ -50,7 +51,19 @@ resource "aws_instance" "app" {
     encrypted   = true
   }
 
-  user_data                   = file("${path.module}/templates/user_data.sh")
+  user_data = templatefile("${path.module}/templates/user_data.sh.tftpl", {
+    nginx_conf = file("${path.module}/templates/nginx.conf")
+    deploy_script = templatefile("${path.module}/templates/deploy-app.sh.tftpl", {
+      region                  = var.aws_region
+      registry                = split("/", aws_ecr_repository.app["backend"].repository_url)[0]
+      backend_repository_url  = aws_ecr_repository.app["backend"].repository_url
+      frontend_repository_url = aws_ecr_repository.app["frontend"].repository_url
+      db_secret_arn           = aws_db_instance.main.master_user_secret[0].secret_arn
+      db_host                 = aws_db_instance.main.address
+      db_name                 = aws_db_instance.main.db_name
+      db_username             = aws_db_instance.main.username
+    })
+  })
   user_data_replace_on_change = true
 
   tags = {
