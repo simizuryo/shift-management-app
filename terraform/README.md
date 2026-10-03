@@ -26,7 +26,7 @@ VPC 10.0.0.0/16
  │                  │
  │                  ▼
  └─ プライベートサブネット 10.0.10.0/24 (1a) / 10.0.11.0/24 (1c)  ※インターネットへの経路なし
-     └─ RDS PostgreSQL 17 db.t4g.micro (シングルAZ, 1a に配置)
+     └─ RDS PostgreSQL 17 db.t4g.micro (シングルAZ, 1a/1c のうち空きのある AZ に AWS が配置)
 
 ECR: shift-management-app/backend, shift-management-app/frontend(手元でビルドして push、EC2 は pull するだけ)
 ```
@@ -38,7 +38,7 @@ ECR: shift-management-app/backend, shift-management-app/frontend(手元でビル
 - 接続は **SSM Session Manager** で行う。SSH キーは作らず、22 番ポートも開けない
 - IMDSv2 を必須にしている
 - ALB / NAT Gateway / ECS / Elastic IP は無料利用枠がない、または不要なため使わない
-- RDS はパブリックアクセスを無効にしている。DB サブネットグループの要件でプライベートサブネットを 2 AZ 分作るが、RDS 自体はシングルAZ
+- RDS はパブリックアクセスを無効にしている。DB サブネットグループの要件でプライベートサブネットを 2 AZ 分作るが、RDS 自体はシングルAZ。AZ は固定しない(1a で db.t4g.micro の容量不足が起きたため)
 - RDS のマスターパスワードは RDS が生成して **Secrets Manager** に保存する(`manage_master_user_password`)。tfstate には平文で残らない。EC2 のロールにはこのシークレットの読み取り権限だけを付けている
 - 検証用のため、RDS のバックアップ保持は 0 日、削除保護なし、destroy 時の最終スナップショットなし。**destroy すると DB のデータは消える**
 - Rails の DB パスワードは、デプロイのたびに EC2 上で Secrets Manager から取り出し、root だけが読める `/etc/shift-app/backend.env` に書く(RDS が管理するシークレットは定期的にローテーションされるため、毎回取り直す)
